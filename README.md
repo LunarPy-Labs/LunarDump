@@ -158,7 +158,7 @@ Output preview:
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │ Config File              │ config.yaml                   │ VALID (Pydantic v2)                │
 │ DB Engine (mysql)        │ Tool binary check             │ INSTALLED                          │
-│ DB Connection            │ 127.0.0.1:3306/live_chat      │ CONNECTED                          │
+│ DB Connection            │ 127.0.0.1:3306/db_user        │ CONNECTED                          │
 │ Encryption (AES-256-GCM) │ Env: LUNARDUMP_ENCRYPTION_KEY │ KEY READY                          │
 │ Storage Target           │ s3://company-db-backups       │ REACHABLE                          │
 └──────────────────────────┴───────────────────────────────┴────────────────────────────────────┘
@@ -198,7 +198,7 @@ Perform an instant database dump directly to a local file or stdout without requ
 
 ```bash
 # Dump MySQL directly to file
-lunardump db dump --type mysql --host localhost --user root --name live_chat --output dump.sql
+lunardump db dump --type mysql --host localhost --user root --name db_name --output dump.sql
 
 # Dump PostgreSQL directly to stdout
 lunardump db dump --type postgres --host localhost --user postgres --name main_db > dump.sql
