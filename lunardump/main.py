@@ -6,6 +6,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(override=False)
+except ImportError:
+    pass
+
 import typer
 from rich.panel import Panel
 from rich.table import Table

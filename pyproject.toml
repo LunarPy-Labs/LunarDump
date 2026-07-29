@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lunardump"
-version = "0.1.1"
+version = "0.1.2"
 description = "A lightweight, zero-trust CLI tool built in Python to automate, encrypt, and stream database backups directly to multi-cloud storage."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,6 +34,7 @@ dependencies = [
     "cryptography>=41.0.0",
     "boto3>=1.28.0",
     "httpx>=0.24.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.urls]
