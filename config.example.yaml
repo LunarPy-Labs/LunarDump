@@ -1,0 +1,30 @@
+version: "1.0"
+backup:
+  name: "production-postgres-daily"
+  database:
+    type: "postgres"
+    host: "localhost"
+    port: 5432
+    name: "main_db"
+    user: "postgres"
+    password_env: "DB_PASSWORD" # Environment variable containing password
+  security:
+    encrypt: true
+    algorithm: "aes-256-gcm"
+    key_env: "LUNARDUMP_ENCRYPTION_KEY"
+  storage:
+    provider: "s3"
+    bucket: "company-db-backups"
+    region: "ap-southeast-1"
+    path: "daily/postgres/"
+    retention_days: 30
+    endpoint_url: "" # Optional for S3-compatible (MinIO / R2)
+  notifications:
+    on_success: true
+    on_failure: true
+    channels:
+      - type: "telegram"
+        bot_token_env: "TELEGRAM_BOT_TOKEN"
+        chat_id: "-100123456789"
+      - type: "slack"
+        webhook_url_env: "SLACK_WEBHOOK_URL"
