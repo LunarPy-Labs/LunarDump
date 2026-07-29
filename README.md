@@ -218,6 +218,42 @@ crontab -e
 0 2 * * * cd /opt/lunardump && source .env && lunardump run --config config.yaml >> /var/log/lunardump.log 2>&1
 ```
 
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Whether it's reporting a bug, adding support for new database engines or storage providers, or improving documentation, your help is greatly appreciated.
+
+For full development setup, testing standards, and pull request guidelines, please read our [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Quick Start for Contributors:
+
+1. **Fork the Repository** on GitHub.
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/indhifarhandika/LunarDump.git
+   cd LunarDump
+   ```
+3. **Set up virtual environment & development dependencies**:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -e ".[dev,gcs]"
+   ```
+4. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+5. **Run test suite & ensure code coverage passes**:
+   ```bash
+   pytest --cov=lunardump --cov-report=term-missing
+   ```
+6. **Commit & Push your changes**, then submit a **Pull Request**!
+
+---
+
+## 🔒 Security
+
+For security policies, vulnerability reporting, and cryptographic safety guidelines, please read our [SECURITY.md](SECURITY.md).
+
 ---
 
 ## ☕ Support the Project
