@@ -1,3 +1,7 @@
+<div align="center">
+<img width="250" height="250" alt="LunarDump Logo" src="https://github.com/user-attachments/assets/57d7c60c-6dcc-4fba-8a18-c58ffbf2ec11" />
+</div>
+
 # 🌖 LunarDump
 
 [![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue)](https://pypi.org/project/lunardump/)
