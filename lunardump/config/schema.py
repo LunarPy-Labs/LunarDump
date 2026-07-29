@@ -33,8 +33,9 @@ class DatabaseConfig(BaseModel):
             elif self.type == "mongo":
                 self.port = 27017
 
-        if self.password_env and os.getenv(self.password_env):
-            self.password = os.getenv(self.password_env)
+        if not self.password and self.password_env:
+            env_val = os.getenv(self.password_env)
+            self.password = env_val if env_val is not None else self.password_env
         return self
 
 
@@ -56,9 +57,20 @@ class SecurityConfig(BaseModel):
 
     @model_validator(mode="after")
     def resolve_key(self) -> "SecurityConfig":
-        if self.key_env and os.getenv(self.key_env):
-            self.key = os.getenv(self.key_env)
-        elif self.key_path and os.path.exists(self.key_path):
+        if self.key:
+            return self
+
+        if self.key_env:
+            val = os.getenv(self.key_env)
+            if val:
+                self.key = val
+            elif os.path.exists(self.key_env):
+                with open(self.key_env, "r", encoding="utf-8") as f:
+                    self.key = f.read().strip()
+            elif len(self.key_env) >= 32:
+                self.key = self.key_env
+
+        if not self.key and self.key_path and os.path.exists(self.key_path):
             with open(self.key_path, "r", encoding="utf-8") as f:
                 self.key = f.read().strip()
         return self
@@ -84,6 +96,9 @@ class NotificationChannelConfig(BaseModel):
     bot_token_env: Optional[str] = Field(
         default=None, description="Env var holding Telegram bot token"
     )
+    bot_token: Optional[str] = Field(
+        default=None, description="Direct Telegram bot token string"
+    )
     chat_id: Optional[str] = Field(
         default=None, description="Telegram chat ID or channel ID"
     )
@@ -96,8 +111,13 @@ class NotificationChannelConfig(BaseModel):
 
     @model_validator(mode="after")
     def resolve_envs(self) -> "NotificationChannelConfig":
-        if self.webhook_url_env and os.getenv(self.webhook_url_env):
-            self.webhook_url = os.getenv(self.webhook_url_env)
+        if not self.bot_token and self.bot_token_env:
+            env_val = os.getenv(self.bot_token_env)
+            self.bot_token = env_val if env_val is not None else self.bot_token_env
+
+        if not self.webhook_url and self.webhook_url_env:
+            env_val = os.getenv(self.webhook_url_env)
+            self.webhook_url = env_val if env_val is not None else self.webhook_url_env
         return self
 
 

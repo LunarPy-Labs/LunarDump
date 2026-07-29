@@ -2,6 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue)](https://pypi.org/project/lunardump/)
 [![Python Version](https://img.shields.io/pypi/pyversions/lunardump.svg)](https://pypi.org/project/lunardump/)
+[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ko-Fi](https://img.shields.io/badge/Ko--Fi-FF5252?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/indhifarhandika)
 

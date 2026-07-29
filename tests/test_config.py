@@ -17,10 +17,16 @@ def test_database_config_default_ports():
     assert mongo_cfg.port == 27017
 
 
-def test_security_config_env_resolution(monkeypatch):
+def test_security_config_env_resolution(monkeypatch, tmp_path):
     monkeypatch.setenv("TEST_KEY_ENV", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
     sec_cfg = SecurityConfig(key_env="TEST_KEY_ENV")
     assert sec_cfg.key == "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+    # Test keyfile path resolution
+    key_file = tmp_path / "secret.key"
+    key_file.write_text("file_secret_key_12345678901234567890")
+    sec_file_cfg = SecurityConfig(key_env="NON_EXISTENT_ENV", key_path=str(key_file))
+    assert sec_file_cfg.key == "file_secret_key_12345678901234567890"
 
 
 def test_load_valid_config():
@@ -56,6 +62,18 @@ backup:
         assert config.backup.storage.retention_days == 7
     finally:
         os.unlink(f_path)
+
+
+def test_load_invalid_yaml(tmp_path):
+    bad_yaml = tmp_path / "bad.yaml"
+    bad_yaml.write_text(": : bad yaml syntax")
+    with pytest.raises(ValueError, match="Failed to parse YAML"):
+        load_config(bad_yaml)
+
+    list_yaml = tmp_path / "list.yaml"
+    list_yaml.write_text("- item1\n- item2")
+    with pytest.raises(ValueError, match="must be a valid dictionary"):
+        load_config(list_yaml)
 
 
 def test_load_non_existent_config():
