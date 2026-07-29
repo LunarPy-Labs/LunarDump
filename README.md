@@ -27,3 +27,9 @@ lunardump run --config config.yaml
 
 # Example: Verify connectivity to database, cloud storage, and webhooks
 lunardump config check
+
+## ☕ Support the Project
+
+If you find **LunarDump** useful, please consider supporting its development:
+
+[![Ko-Fi](https://img.shields.io/badge/Ko--Fi-FF5252?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/indhifarhandika)
