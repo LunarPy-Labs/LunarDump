@@ -27,8 +27,9 @@ lunardump run --config config.yaml
 
 # Example: Verify connectivity to database, cloud storage, and webhooks
 lunardump config check
+```
 
-## ☕ Support the Project
+### ☕ Support the Project
 
 If you find **LunarDump** useful, please consider supporting its development:
 
