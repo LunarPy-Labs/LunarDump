@@ -8,9 +8,9 @@ version = "0.1.0"
 description = "A lightweight, zero-trust CLI tool built in Python to automate, encrypt, and stream database backups directly to multi-cloud storage."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT"
+license = { text = "MIT" }
 authors = [
-    { name = "LunarDump Team" }
+    { name = "Indhi Farhandika R" }
 ]
 keywords = ["backup", "database", "postgres", "mysql", "mongodb", "encryption", "s3", "gcs", "cli"]
 classifiers = [
@@ -36,6 +36,12 @@ dependencies = [
     "httpx>=0.24.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/indhifarhandika/LunarDump"
+Repository = "https://github.com/indhifarhandika/LunarDump"
+"Bug Tracker" = "https://github.com/indhifarhandika/LunarDump/issues"
+Funding = "https://ko-fi.com/indhifarhandika"
+
 [project.optional-dependencies]
 gcs = [
     "google-cloud-storage>=2.10.0"
@@ -43,6 +49,8 @@ gcs = [
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
 ]
 
 [project.scripts]
