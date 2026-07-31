@@ -67,7 +67,7 @@ brew install libpq
 brew install mongodb-database-tools
 ```
 
-#### 🐧 Ubuntu / Debian
+#### 🐧 Ubuntu
 ```bash
 # For MySQL
 sudo apt update && sudo apt install -y mysql-client
@@ -77,6 +77,22 @@ sudo apt install -y postgresql-client
 
 # For MongoDB
 sudo apt install -y mongodb-org-tools
+
+```
+#### 🐧 Debian
+```bash
+# For MySQL
+sudo apt update && sudo apt install -y mariadb-client-compat
+
+# For PostgreSQL
+sudo apt install -y postgresql-client
+
+# For MongoDB
+sudo apt-get install gnupg curl
+curl -fsSL https://pgp.mongodb.com/server-8.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg  --dearmor
+echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
 ```
 
 ---
