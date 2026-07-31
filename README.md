@@ -10,6 +10,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/lunardump.svg)](https://pypi.org/project/lunardump/)
 [![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Telegram Community](https://img.shields.io/badge/Telegram-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://t.me/lunardump)
 [![Ko-Fi](https://img.shields.io/badge/Ko--Fi-FF5252?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/indhifarhandika)
 
 > **Secure, Automated, and Zero-Trust Database Backup Engine**
@@ -328,6 +329,14 @@ For security policies, vulnerability reporting, and cryptographic safety guideli
 <img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" />
 
 * **HackTrack:** Pre-installed natively. You can run `lunardump` directly from the terminal or launch it from the system menu under **Extra Tools**.
+
+---
+
+## 💬 Community & Support
+
+Have questions, need help setting up your backup pipeline, or want to discuss feature requests with other developers? Join our official Telegram Community:
+
+[![Telegram Community](https://img.shields.io/badge/Telegram-Join_Community-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/lunardump)
 
 ---
 

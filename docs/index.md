@@ -23,3 +23,11 @@ Welcome to the official documentation for **LunarDump**, a modern, developer-fri
 - [Configuration Reference](configuration.md) - Complete schema reference guide for database, security, and cloud storage settings.
 - [CLI Commands](commands.md) - Reference for `run`, `config check`, `keygen`, `restore`, and `db dump`.
 - [Backup Integrity Verification](verification.md) - Validate backup files with `--verify`.
+
+---
+
+## 💬 Community & Support
+
+Have questions, need help setting up your backup pipeline, or want to connect with other LunarDump users?
+
+👉 Join our official [Telegram Community (t.me/lunardump)](https://t.me/lunardump)!
