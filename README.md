@@ -306,6 +306,14 @@ For security policies, vulnerability reporting, and cryptographic safety guideli
 
 ---
 
+## 🌐 OS Distribution
+
+<img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" />
+
+* **HackTrack:** Pre-installed natively. You can run `lunardump` directly from the terminal or launch it from the system menu under **Extra Tools**.
+
+---
+
 ## ☕ Support the Project
 
 If you find **LunarDump** useful for your projects or infrastructure, please consider supporting its development:
