@@ -6,7 +6,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue)](https://pypi.org/project/lunardump/)
 [![Python Version](https://img.shields.io/pypi/pyversions/lunardump.svg)](https://pypi.org/project/lunardump/)
-[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
+[![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ko-Fi](https://img.shields.io/badge/Ko--Fi-FF5252?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/indhifarhandika)
 
@@ -29,14 +29,24 @@
 
 ## 📦 Installation & Requirements
 
-### 1. Install LunarDump via PyPI
+### 1. Install LunarDump via PyPI or uv
 
+#### Via `pip`:
 ```bash
 # Standard installation
 pip install lunardump
 
-# Optional: Install with Google Cloud Storage support
+# With Google Cloud Storage support
 pip install "lunardump[gcs]"
+```
+
+#### Via `uv` (Fastest Python Tool Manager):
+```bash
+# Global CLI Tool Installation (Recommended for servers & workstations)
+uv tool install lunardump
+
+# One-Off Instant Execution without installing (like npx)
+uvx lunardump run --config config.yaml
 ```
 
 ### 2. System Binary Prerequisites
@@ -94,7 +104,7 @@ backup:
   name: "production-mysql-daily"
   
   database:
-    type: "mysql"            # postgres | mysql | mongo
+    type: "mysql"            # Options: postgres | mysql | mongo
     host: "127.0.0.1"
     port: 3306
     name: "username"
@@ -104,23 +114,46 @@ backup:
   security:
     encrypt: true
     algorithm: "aes-256-gcm"
-    key_env: "LUNARDUMP_ENCRYPTION_KEY" # Env var holding secret key
+    key_env: "LUNARDUMP_ENCRYPTION_KEY" # Env var name, key file path, or raw hex key string
 
   storage:
-    provider: "s3"           # s3 | gcs | local
+    # Target storage provider options:
+    # - "s3"    : AWS S3, Cloudflare R2, MinIO, Wasabi, DigitalOcean Spaces
+    # - "gcs"   : Google Cloud Storage
+    # - "local" : Local server directory path
+    provider: "s3"
+
+    # Bucket name for cloud storage (S3/GCS), or root folder path for local storage (e.g., "/var/backups")
     bucket: "company-db-backups"
+
+    # Storage region (Required for AWS S3; optional for GCS or Local)
     region: "ap-southeast-1"
+
+    # Remote folder path prefix inside the bucket where backup files (.enc) will be stored
     path: "daily/mysql/"
+
+    # Retention policy: automatic purge of backup archives older than the specified days
     retention_days: 30
-    endpoint_url: ""         # Optional for S3-compatible (MinIO / Cloudflare R2)
+
+    # Custom S3 endpoint URL (Required ONLY for MinIO, Cloudflare R2, or custom S3-compatible providers)
+    # Examples:
+    # - Cloudflare R2: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    # - MinIO        : "http://minio.internal:9000"
+    endpoint_url: ""
 
   notifications:
     on_success: true
     on_failure: true
+
+    # Notification Channels:
+    # - Must contain AT LEAST 1 channel or CAN contain MULTIPLE channels (e.g. Telegram + Slack together).
+    # - Supported types: "telegram" and "slack".
     channels:
       - type: "telegram"
         bot_token_env: "TELEGRAM_BOT_TOKEN"
         chat_id: "-82764827364"
+      - type: "slack"
+        webhook_url_env: "SLACK_WEBHOOK_URL"
 ```
 
 ### Step 3: Setup Environment Variables (`.env`)
@@ -194,6 +227,18 @@ lunardump restore --file backup_20260729.enc --key secret.key --output backup_de
 
 # Decrypt using raw key string
 lunardump restore --file backup_20260729.enc --key f77693f31ebef68d774913969a3f6a57ee... --output backup_decrypted.sql
+```
+
+### 🛡️ Verify Backup Integrity & Checksums (`--verify`)
+
+Verify that a backup archive is authentic, uncorrupted, and decryptable without restoring it to database or disk:
+
+```bash
+# Verify local encrypted backup file
+lunardump restore --file backup_20260730.enc --key secret.key --verify
+
+# Download and verify directly from cloud storage (AWS S3 / GCS)
+lunardump restore --config config.yaml --remote-key daily/mysql/backup_20260730.enc --verify
 ```
 
 ### Direct Database Dump Command

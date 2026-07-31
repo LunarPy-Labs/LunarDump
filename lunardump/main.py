@@ -193,33 +193,138 @@ def keygen(
 
 @app.command("restore")
 def restore_backup(
-    file: Path = typer.Option(
-        ..., "--file", "-f", help="Path to encrypted backup file", exists=True
+    file: Optional[Path] = typer.Option(
+        None, "--file", "-f", help="Path to local encrypted backup file (.enc)"
     ),
-    key: str = typer.Option(
-        ..., "--key", "-k", help="Secret key hex string or path to secret key file"
+    key: Optional[str] = typer.Option(
+        None, "--key", "-k", help="Secret key hex string or path to secret key file"
     ),
     output: Optional[Path] = typer.Option(
         None, "--output", "-o", help="Path to save decrypted output file"
     ),
+    config_file: Optional[Path] = typer.Option(
+        None, "--config", "-c", help="Path to YAML configuration file for remote storage download"
+    ),
+    remote_key: Optional[str] = typer.Option(
+        None, "--remote-key", "-r", help="Remote key/filename in cloud storage to download & verify/restore"
+    ),
+    verify: bool = typer.Option(
+        False, "--verify", help="Verify backup integrity, decrypt stream, and validate checksums without restoring to DB/disk"
+    ),
 ):
-    """Decrypt an encrypted LunarDump file (.enc) and save or restore."""
+    """Decrypt and restore an encrypted backup file, or verify its integrity and checksums with --verify."""
     secret_key = key
-    if os.path.exists(key):
-        with open(key, "r", encoding="utf-8") as f:
+    data_stream_gen = None
+    file_label = ""
+
+    # Resolve configuration if provided for cloud storage download or key lookup
+    cfg: Optional[LunarDumpConfig] = None
+    if config_file and config_file.exists():
+        try:
+            cfg = load_config(config_file)
+            if not secret_key and cfg.backup.security.key:
+                secret_key = cfg.backup.security.key
+        except Exception as err:
+            error_console.print(f"[bold red]Configuration Load Error:[/bold red] {err}")
+            raise typer.Exit(code=1)
+
+    # 1. Determine input data stream source (local file or cloud storage)
+    if remote_key:
+        if not cfg:
+            # Fall back to default config.yaml if available
+            default_cfg_path = Path("config.yaml")
+            if default_cfg_path.exists():
+                cfg = load_config(default_cfg_path)
+            else:
+                error_console.print("[bold red]Configuration Error:[/bold red] --remote-key requires --config <path> or config.yaml")
+                raise typer.Exit(code=1)
+
+        try:
+            storage_driver = get_storage(cfg.backup.storage)
+            console.print(f"[cyan]Downloading '{remote_key}' from storage provider ({cfg.backup.storage.provider})...[/cyan]")
+            data_stream_gen = storage_driver.download_stream(remote_key)
+            file_label = f"{cfg.backup.storage.provider}://{cfg.backup.storage.bucket}/{remote_key}"
+            if not secret_key and cfg.backup.security.key:
+                secret_key = cfg.backup.security.key
+        except Exception as err:
+            error_console.print(f"[bold red]Cloud Storage Download Error:[/bold red] {err}")
+            raise typer.Exit(code=1)
+
+    elif file:
+        if not file.exists():
+            error_console.print(f"[bold red]File Error:[/bold red] Local backup file '{file}' does not exist.")
+            raise typer.Exit(code=1)
+
+        def _local_file_stream():
+            with open(file, "rb") as f:
+                while chunk := f.read(64 * 1024):
+                    yield chunk
+
+        data_stream_gen = _local_file_stream()
+        file_label = str(file)
+
+    else:
+        error_console.print("[bold red]Argument Error:[/bold red] Please specify --file <path> or --remote-key <key> --config <config.yaml>")
+        raise typer.Exit(code=1)
+
+    # 2. Determine Secret Key
+    if not secret_key:
+        secret_key = os.getenv("LUNARDUMP_ENCRYPTION_KEY")
+
+    if not secret_key:
+        error_console.print("[bold red]Key Error:[/bold red] Encryption key is missing. Provide --key <string/file> or set LUNARDUMP_ENCRYPTION_KEY.")
+        raise typer.Exit(code=1)
+
+    if os.path.exists(secret_key):
+        with open(secret_key, "r", encoding="utf-8") as f:
             secret_key = f.read().strip()
 
     cipher = StreamCipher(secret_key)
 
-    def file_stream():
-        with open(file, "rb") as f:
-            while chunk := f.read(64 * 1024):
-                yield chunk
+    # 3. Handle --verify Integrity Verification
+    if verify:
+        console.print(f"[cyan]Verifying integrity and decrypting payload for '[bold]{file_label}[/bold]'...[/cyan]")
+        try:
+            is_valid, byte_count, sha256_hex, md5_hex, total_chunks = cipher.verify_stream(data_stream_gen)
 
-    console.print(f"[cyan]Decrypting encrypted file '{file}'...[/cyan]")
+            # Format byte size
+            kb = byte_count / 1024
+            mb = kb / 1024
+            size_str = f"{mb:.2f} MB ({byte_count:,} bytes)" if mb >= 1 else f"{kb:.2f} KB ({byte_count:,} bytes)"
+
+            table = Table(title="LunarDump Backup Integrity & Verification Report", show_header=True)
+            table.add_column("Metric", style="cyan")
+            table.add_column("Details", style="magenta")
+
+            table.add_row("Backup Source", file_label)
+            table.add_row("Integrity Status", "[bold green]PASSED (AES-256-GCM Authenticated)[/bold green]")
+            table.add_row("Decrypted Size", size_str)
+            table.add_row("SHA-256 Checksum", f"[bold yellow]{sha256_hex}[/bold yellow]")
+            table.add_row("MD5 Checksum", f"[yellow]{md5_hex}[/yellow]")
+            table.add_row("Validated Chunks", f"{total_chunks} chunk(s)")
+
+            console.print(table)
+            console.print("\n[bold green]✓ Backup file is authentic, uncorrupted, and ready for disaster recovery.[/bold green]")
+            return
+
+        except Exception as err:
+            table = Table(title="LunarDump Backup Integrity & Verification Report", show_header=True)
+            table.add_column("Metric", style="cyan")
+            table.add_column("Details", style="magenta")
+
+            table.add_row("Backup Source", file_label)
+            table.add_row("Integrity Status", "[bold red]FAILED / CORRUPTED[/bold red]")
+            table.add_row("Error Details", str(err))
+
+            console.print(table)
+            error_console.print(f"\n[bold red]✗ Verification Failed: Backup file is corrupted, invalid format, or key mismatch.[/bold red]")
+            raise typer.Exit(code=1)
+
+    # 4. Normal Decrypt & Restore execution
+    console.print(f"[cyan]Decrypting encrypted file '{file_label}'...[/cyan]")
 
     try:
-        decrypted_stream = cipher.decrypt_stream(file_stream())
+        decrypted_stream = cipher.decrypt_stream(data_stream_gen)
         if output:
             output.parent.mkdir(parents=True, exist_ok=True)
             with open(output, "wb") as out_f:

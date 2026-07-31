@@ -110,6 +110,19 @@ def test_cli_restore(tmp_path):
     assert result.exit_code == 0
     assert out_file.read_bytes() == original_text
 
+    # Test restore --verify (PASSED)
+    result_verify = runner.invoke(app, ["restore", "--file", str(enc_file), "--key", key, "--verify"])
+    assert result_verify.exit_code == 0
+    assert "PASSED (AES-256-GCM Authenticated)" in result_verify.stdout
+    assert "SHA-256 Checksum" in result_verify.stdout
+
+    # Test restore --verify (FAILED / Corrupted)
+    corrupted_file = tmp_path / "corrupted.enc"
+    corrupted_file.write_bytes(b"LUNARDUMP_V1\n1234567890123456bad_payload_data")
+    result_bad = runner.invoke(app, ["restore", "--file", str(corrupted_file), "--key", key, "--verify"])
+    assert result_bad.exit_code == 1
+    assert "FAILED / CORRUPTED" in result_bad.stdout
+
 
 def test_cli_db_dump(tmp_path):
     out_file = tmp_path / "dump.sql"

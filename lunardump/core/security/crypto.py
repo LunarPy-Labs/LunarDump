@@ -3,7 +3,7 @@
 import os
 import base64
 import struct
-from typing import Generator, Union
+from typing import Generator, Union, Tuple
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
@@ -147,3 +147,25 @@ class StreamCipher:
         for chunk in self.decrypt_stream(_gen()):
             result.extend(chunk)
         return bytes(result)
+
+    def verify_stream(
+        self, stream: Generator[bytes, None, None]
+    ) -> Tuple[bool, int, str, str, int]:
+        """Verify stream integrity by stream-decrypting and calculating payload hashes.
+
+        Returns:
+            (is_valid, byte_count, sha256_hex, md5_hex, total_chunks)
+        """
+        import hashlib
+        sha256 = hashlib.sha256()
+        md5 = hashlib.md5()
+        byte_count = 0
+        total_chunks = 0
+
+        for chunk in self.decrypt_stream(stream):
+            byte_count += len(chunk)
+            sha256.update(chunk)
+            md5.update(chunk)
+            total_chunks += 1
+
+        return True, byte_count, sha256.hexdigest(), md5.hexdigest(), total_chunks

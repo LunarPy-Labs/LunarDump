@@ -2,32 +2,53 @@ version: "1.0"
 backup:
   name: "production-postgres-daily"
   database:
-    type: "postgres"
+    type: "postgres" # Options: postgres | mysql | mongo
     host: "localhost"
     port: 5432
     name: "main_db"
     user: "postgres"
-    password_env: "DB_PASSWORD" # Environment variable containing password
-    
+    password_env: "DB_PASSWORD" # Environment variable name holding database password
+
   security:
     encrypt: true
     algorithm: "aes-256-gcm"
-    key_env: "LUNARDUMP_ENCRYPTION_KEY"
+    key_env: "LUNARDUMP_ENCRYPTION_KEY" # Env var name, key file path, or raw hex key string
 
   storage:
-    provider: "s3" #gcs / s3 / minio / r2
+    # Target storage provider options:
+    # - "s3"    : AWS S3, Cloudflare R2, MinIO, Wasabi, DigitalOcean Spaces
+    # - "gcs"   : Google Cloud Storage
+    # - "local" : Local server directory path
+    provider: "s3"
+
+    # Bucket name for cloud storage (S3/GCS), or root folder path for local storage (e.g., "/var/backups")
     bucket: "company-db-backups"
+
+    # Storage region (Required for AWS S3; optional for GCS or Local)
     region: "ap-southeast-1"
+
+    # Remote folder path prefix inside the bucket where backup files (.enc) will be stored
     path: "daily/postgres/"
+
+    # Retention policy: automatic purge of backup archives older than the specified days
     retention_days: 30
-    endpoint_url: "" # Optional for S3-compatible (MinIO / R2)
+
+    # Custom S3 endpoint URL (Required ONLY for MinIO, Cloudflare R2, or custom S3-compatible providers)
+    # Examples:
+    # - Cloudflare R2: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    # - MinIO        : "http://minio.internal:9000"
+    endpoint_url: ""
 
   notifications:
     on_success: true
     on_failure: true
+
+    # Notification Channels:
+    # - Must contain AT LEAST 1 channel or CAN contain MULTIPLE channels (e.g. Telegram + Slack together).
+    # - Supported types: "telegram" and "slack".
     channels:
       - type: "telegram"
-        bot_token_env: "TELEGRAM_BOT_TOKEN"
+        bot_token_env: "TELEGRAM_BOT_TOKEN" # Env var name or direct bot token string
         chat_id: "-100123456789"
       - type: "slack"
-        webhook_url_env: "SLACK_WEBHOOK_URL"
+        webhook_url_env: "SLACK_WEBHOOK_URL" # Env var name or direct webhook URL
