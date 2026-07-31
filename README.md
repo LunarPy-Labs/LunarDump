@@ -4,7 +4,7 @@
 
 # 🌖 LunarDump
 
-[![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue)](https://pypi.org/project/lunardump/)
+[![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue&nocache=1)](https://pypi.org/project/lunardump/)
 [![Python Version](https://img.shields.io/pypi/pyversions/lunardump.svg)](https://pypi.org/project/lunardump/)
 [![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
