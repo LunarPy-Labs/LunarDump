@@ -1,0 +1,56 @@
+site_name: LunarDump Documentation
+site_description: Secure, Automated, and Zero-Trust Database Backup & Streaming Engine
+site_author: Indhi Farhandika R
+site_url: https://lunardump.readthedocs.io/
+
+repo_name: indhifarhandika/LunarDump
+repo_url: https://github.com/indhifarhandika/LunarDump
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra:
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+  - Installation & Setup: installation.md
+  - Quickstart Guide: quickstart.md
+  - Configuration Reference: configuration.md
+  - CLI Commands: commands.md
+  - Backup Integrity Verification: verification.md

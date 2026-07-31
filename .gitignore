@@ -38,3 +38,6 @@ htmlcov/
 secret.key
 *.key
 .env
+
+# MkDocs build directory
+site/
