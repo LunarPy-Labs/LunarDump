@@ -27,7 +27,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
-    curl -fsSL "$URL" | tar -xz --strip-components=2 -C /usr/local/bin */bin/
+    curl -fsSL "$URL" | tar -xz --strip-components=2 -C /usr/local/bin
 
 # Copy package files into container
 COPY pyproject.toml README.md config.example.yaml ./
