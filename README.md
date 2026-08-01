@@ -1,5 +1,5 @@
 <div align="center">
-<img width="250" height="250" alt="LunarDump Logo" src="https://github.com/user-attachments/assets/57d7c60c-6dcc-4fba-8a18-c58ffbf2ec11" />
+<img width="250" height="250" alt="LunarDump Logo" src="https://github.com/user-attachments/assets/7bf29640-f20c-44f9-bb22-5d64120c91f0" />
 </div>
 
 # 🌖 LunarDump
