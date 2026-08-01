@@ -24,11 +24,22 @@ from lunardump.core.storage import get_storage
 from lunardump.core.notification import notify_event
 from lunardump.core.utils.logger import console, logger, error_console
 
+def get_banner_panel() -> Panel:
+    banner_content = (
+        "[bold cyan]"
+        " █░░ █░█ █▄░█ █▀█ █▀█ █▀▄ █░█ █▀▄▀█ █▀█\n"
+        " █▄▄ █▄█ █░▀█ █▀█ █▀▄ █▄▀ █▄█ █░▀░█ █▀▀"
+        "[/bold cyan]\n\n"
+        "[bold white]LunarDump[/bold white] - Open-Source Zero-Trust Database Backup Engine"
+    )
+    return Panel(banner_content, border_style="cyan", expand=False)
+
+
 app = typer.Typer(
     name=__app_name__,
-    help="LunarDump - Open-Source Zero-Trust Database Backup & Streaming Tool",
+    help="LunarDump - Open-Source Zero-Trust Database Backup Engine",
     add_completion=False,
-    rich_markup_mode="markdown",
+    rich_markup_mode="rich",
 )
 
 db_app = typer.Typer(help="Direct database dump and connection commands")
@@ -44,8 +55,16 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-@app.callback()
+def help_callback(ctx: typer.Context, value: bool):
+    if value and not ctx.resilient_parsing:
+        console.print(get_banner_panel())
+        console.print(ctx.get_help())
+        raise typer.Exit()
+
+
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -53,10 +72,20 @@ def main(
         help="Show version and exit.",
         callback=version_callback,
         is_eager=True,
-    )
+    ),
+    help_flag: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        help="Show this message and exit.",
+        callback=help_callback,
+        is_eager=True,
+    ),
 ):
     """LunarDump CLI tool."""
-    pass
+    if ctx.invoked_subcommand is None and not ctx.resilient_parsing:
+        console.print(get_banner_panel())
+        console.print("\nUse [bold cyan]lunardump --help[/bold cyan] for available commands and options.\n")
+        raise typer.Exit()
 
 
 @app.command("run")

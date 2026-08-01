@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  lunardump:
+    image: indhifarhandika/lunardump:latest
+    container_name: lunardump
+    restart: "no"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./.env:/app/.env:ro
+      - ./backups:/app/backups:rw
+    command: ["run", "--config", "/app/config.yaml"]

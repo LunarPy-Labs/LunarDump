@@ -48,9 +48,16 @@ extra:
     provider: mike
 
 nav:
-  - Home: index.md
-  - Installation & Setup: installation.md
-  - Quickstart Guide: quickstart.md
-  - Configuration Reference: configuration.md
-  - CLI Commands: commands.md
-  - Backup Integrity Verification: verification.md
+  - Getting Started:
+      - Overview: index.md
+      - Installation & Setup: installation.md
+      - Quickstart Guide: quickstart.md
+  - Usage & Guides:
+      - Configuration Reference: configuration.md
+      - CLI Commands Reference: commands.md
+      - Backup Integrity Verification: verification.md
+      - Retention & Lifecycle: retention.md
+  - Architecture & Deployment:
+      - Zero-Disk Architecture: architecture.md
+      - Docker Deployment: docker.md
+  - FAQ & Troubleshooting: faq.md

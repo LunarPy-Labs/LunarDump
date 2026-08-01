@@ -1,3 +1,9 @@
+<div align="center">
+<img width="250" height="250" alt="LunarDump Logo" src="https://github.com/user-attachments/assets/57d7c60c-6dcc-4fba-8a18-c58ffbf2ec11" />
+</div>
+
+---
+
 # 🌔 LunarDump CLI Documentation
 
 Welcome to the official documentation for **LunarDump**, a modern, developer-friendly Command-Line Interface (CLI) tool designed to streamline, encrypt, and automate your database backup workflows.
@@ -13,6 +19,9 @@ Welcome to the official documentation for **LunarDump**, a modern, developer-fri
 - **Backup Verification (`--verify`)**: On-the-fly stream decryption, integrity authentication, and checksum generation (SHA-256 / MD5).
 - **Automated Retention Cleaner**: Automatically purges expired backup archives based on your custom `retention_days` window.
 - **Rich Telemetry**: Interactive progress UI and webhook notifications to **Telegram** & **Slack**.
+
+!!! info "Pre-installed in HackTrack OS"
+    LunarDump is included natively in **HackTrack OS**. You can launch `lunardump` directly from any terminal window or from the system menu under **Extra Tools**.
 
 ---
 

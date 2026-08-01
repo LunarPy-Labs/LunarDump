@@ -5,13 +5,13 @@
 # 🌖 LunarDump
 
 [![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue&nocache=1)](https://pypi.org/project/lunardump/)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/lunardump?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/lunardump)
 [![Documentation Status](https://readthedocs.org/projects/lunardump/badge/?version=latest)](https://lunardump.readthedocs.io/)
-[![Downloads](https://assets.piptrends.com/get-last-month-downloads-badge/lunardump.svg)](https://assets.piptrends.com/get-last-month-downloads-badge/lunardump.svg)
+[![Docker Pulls](https://img.shields.io/docker/pulls/indhifarhandika/lunardump.svg)](https://hub.docker.com/r/indhifarhandika/lunardump)
 [![Python Version](https://img.shields.io/pypi/pyversions/lunardump.svg)](https://pypi.org/project/lunardump/)
 [![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Telegram Community](https://img.shields.io/badge/Telegram-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://t.me/lunardump)
-[![Ko-Fi](https://img.shields.io/badge/Ko--Fi-FF5252?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/indhifarhandika)
 
 > **Secure, Automated, and Zero-Trust Database Backup Engine**
 
@@ -50,6 +50,15 @@ uv tool install lunardump
 
 # One-Off Instant Execution without installing (like npx)
 uvx lunardump run --config config.yaml
+```
+
+#### Via `Docker` (Zero Host Dependency Setup):
+```bash
+# Run LunarDump using official Docker image
+docker run --rm \
+  -v $(pwd)/config.yaml:/app/config.yaml:ro \
+  -v $(pwd)/.env:/app/.env:ro \
+  indhifarhandika/lunardump:latest run --config /app/config.yaml
 ```
 
 ### 2. System Binary Prerequisites
