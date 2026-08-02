@@ -13,7 +13,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Telegram Community](https://img.shields.io/badge/Telegram-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://t.me/lunardump)
 
-> **Secure, Automated, and Zero-Trust Database Backup Engine**
+> **Lightweight, Fast, Zero-Trust Database Backup Engine**
 
 **LunarDump** is a modern, developer-friendly Command-Line Interface (CLI) tool designed to streamline and secure your database backup workflows. Built with Python, it automates the entire lifecycle of database disaster recovery—from streaming dumps without memory overhead, applying military-grade AES-256-GCM encryption, to syncing backups directly across cloud providers.
 
