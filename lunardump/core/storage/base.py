@@ -54,3 +54,15 @@ class BaseStorage(ABC):
     def test_connection(self) -> bool:
         """Test bucket access and write permission."""
         pass
+
+    def check_connection(self) -> bool:
+        """Alias for test_connection to maintain API consistency with Dumpers and Restorers."""
+        return self.test_connection()
+
+    def clean_expired_backups(self, days: int) -> List[str]:
+        """Alias for clean_retention."""
+        return self.clean_retention(days)
+
+    def list_backups(self) -> List[dict]:
+        """List backup files in storage target."""
+        return []

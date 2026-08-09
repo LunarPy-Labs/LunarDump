@@ -16,6 +16,8 @@ def notify_event(
         message: Markdown message content.
         status: "success" or "failure".
     """
+    if not config:
+        return
     if status == "success" and not config.on_success:
         return
     if status == "failure" and not config.on_failure:

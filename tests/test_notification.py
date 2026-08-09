@@ -41,6 +41,18 @@ def test_slack_notifier(monkeypatch):
         assert mock_post.called
 
 
+def test_telegram_slack_failure(monkeypatch):
+    tg_cfg = NotificationChannelConfig(type="telegram", bot_token="123", chat_id="456")
+    tg_notifier = TelegramNotifier(tg_cfg)
+
+    slack_cfg = NotificationChannelConfig(type="slack", webhook_url="https://hooks.slack.com/test")
+    slack_notifier = SlackNotifier(slack_cfg)
+
+    with patch("httpx.Client.post", side_effect=Exception("HTTP Error")):
+        assert tg_notifier.send_message("Fail msg") is False
+        assert slack_notifier.send_message("Fail msg") is False
+
+
 def test_notify_event_dispatch():
     config = NotificationConfig(
         on_success=True,
@@ -57,3 +69,8 @@ def test_notify_event_dispatch():
         notify_event(config, "Backup completed", status="success")
         assert mock_tg.called
         assert mock_slack.called
+
+    # Test notify_event with None or on_success disabled
+    config_disabled = NotificationConfig(on_success=False, on_failure=True, channels=[])
+    notify_event(None, "No config")
+    notify_event(config_disabled, "Success skip", status="success")

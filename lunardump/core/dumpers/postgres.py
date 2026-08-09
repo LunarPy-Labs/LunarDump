@@ -80,5 +80,8 @@ class PostgreSQLDumper(BaseDumper):
             "-d", self.config.name,
             "-U", self.config.user,
         ]
-        code, _, _ = run_command(cmd, env=self._build_env())
-        return code == 0
+        try:
+            code, _, _ = run_command(cmd, env=self._build_env())
+            return code == 0
+        except Exception:
+            return False

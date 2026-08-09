@@ -78,3 +78,16 @@ class GCSStorage(BaseStorage):
         except Exception as err:
             logger.error(f"GCS connection test failed: {err}")
             return False
+
+    def list_backups(self) -> List[dict]:
+        """List objects in bucket path."""
+        prefix = self.config.path.strip("/") + "/" if self.config.path else ""
+        blobs = self.client.list_blobs(self.config.bucket, prefix=prefix)
+        files = []
+        for b in blobs:
+            files.append({
+                "key": b.name,
+                "size": getattr(b, "size", 0),
+                "last_modified": str(getattr(b, "updated", "")),
+            })
+        return files

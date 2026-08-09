@@ -1,0 +1,28 @@
+# ==============================================================================
+# LunarDump Live DB Migration Configuration File Example
+# Documentation: https://lunardump.readthedocs.io
+# ==============================================================================
+version: "1.0"
+backup:
+  name: "live-db-migration"
+
+  # 1. SOURCE DATABASE (Server A - Database Asal)
+  database:
+    type: "postgres"               # Options: postgres | mysql | mongo
+    host: "192.168.1.10"
+    port: 5432
+    name: "production_db"
+    user: "postgres"
+    password_env: "SOURCE_DB_PASS" # Nama Environment Variable yang menyimpan password Source DB
+
+  # 2. TARGET DATABASE (Server B - Database Tujuan)
+  target_database:
+    type: "postgres"               # Options: postgres | mysql | mongo
+    host: "192.168.1.20"
+    port: 5432
+    name: "destination_db"
+    user: "postgres"
+    password_env: "TARGET_DB_PASS" # Nama Environment Variable yang menyimpan password Target DB
+
+  # Catatan: Atribut 'security' dan 'storage' bersifat opsional untuk fitur migration.
+  # Data dialirkan langsung (Zero-Disk) dari Server A ke Server B tanpa disimpan ke cloud/local storage.

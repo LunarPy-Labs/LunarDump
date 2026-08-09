@@ -81,5 +81,8 @@ class MongoDBDumper(BaseDumper):
             "--port", str(self.config.port or 27017),
             "--eval", "db.runCommand({ping:1})",
         ]
-        code, _, _ = run_command(cmd)
-        return code == 0
+        try:
+            code, _, _ = run_command(cmd)
+            return code == 0
+        except Exception:
+            return False

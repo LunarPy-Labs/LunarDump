@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lunardump"
-version = "0.3.0"
+version = "0.4.0"
 description = "A lightweight, zero-trust CLI tool built in Python to automate, encrypt, and stream database backups directly to multi-cloud storage."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,6 +35,7 @@ dependencies = [
     "boto3>=1.28.0",
     "httpx>=0.24.0",
     "python-dotenv>=1.0.0",
+    "croniter>=2.0.0",
 ]
 
 [project.urls]
@@ -47,15 +48,26 @@ Funding = "https://ko-fi.com/indhifarhandika"
 gcs = [
     "google-cloud-storage>=2.10.0"
 ]
+ui = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "websockets>=12.0",
+]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "build>=1.0.0",
     "twine>=4.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "websockets>=12.0",
 ]
 
 [project.scripts]
 lunardump = "lunardump.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lunardump"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

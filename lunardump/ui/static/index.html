@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LunarDump - Zero-Trust Backup Engine Control Panel</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">🌖</div>
+        <div class="logo-text">
+          <h2>LunarDump</h2>
+          <span class="badge badge-primary">v0.4.0</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="generator">
+          <span class="nav-icon">⚙️</span>
+          <span>Config Generator</span>
+        </button>
+        <button class="nav-item" data-tab="backup">
+          <span class="nav-icon">⚡</span>
+          <span>Backup Runner</span>
+        </button>
+        <button class="nav-item" data-tab="migration">
+          <span class="nav-icon">🔄</span>
+          <span>Live Migration</span>
+        </button>
+        <button class="nav-item" data-tab="restore">
+          <span class="nav-icon">📥</span>
+          <span>Restore Archives</span>
+        </button>
+        <button class="nav-item" data-tab="cron">
+          <span class="nav-icon">⏰</span>
+          <span>Daemon & Cron</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="ram-badge">
+          <span class="pulse"></span>
+          <span>Peak RAM: <strong>119.1 MB O(1)</strong></span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="page-title">Dashboard Overview</h1>
+          <p id="page-desc">System health, engine metrics, and active backup status</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-secondary" id="btn-run-check">🩺 Run System Check</button>
+        </div>
+      </header>
+
+      <!-- Tab Content 1: Dashboard -->
+      <section class="tab-content active" id="tab-dashboard">
+        <div class="metrics-grid">
+          <div class="card metric-card">
+            <div class="metric-icon">🚀</div>
+            <div class="metric-info">
+              <span class="metric-label">Memory Footprint</span>
+              <h3 class="metric-value">119.1 MB</h3>
+              <span class="metric-sub text-success">Constant O(1) Streaming</span>
+            </div>
+          </div>
+          <div class="card metric-card">
+            <div class="metric-icon">🔐</div>
+            <div class="metric-info">
+              <span class="metric-label">Encryption Engine</span>
+              <h3 class="metric-value">AES-256-GCM</h3>
+              <span class="metric-sub text-accent">End-to-End Authenticated</span>
+            </div>
+          </div>
+          <div class="card metric-card">
+            <div class="metric-icon">🗄️</div>
+            <div class="metric-info">
+              <span class="metric-label">Supported Engines</span>
+              <h3 class="metric-value">Postgres / MySQL / Mongo</h3>
+              <span class="metric-sub">Zero-Disk Pipe Streaming</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <h3>🩺 System Diagnostics & Health Status</h3>
+          <div class="table-container mt-3">
+            <table class="table" id="table-health">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Details</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="health-body">
+                <tr>
+                  <td colspan="3" class="text-center text-muted">Click "Run System Check" to perform diagnostics</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content 2: Config Generator -->
+      <section class="tab-content" id="tab-generator">
+        <div class="card">
+          <h3>⚙️ Instant Template Generator</h3>
+          <p class="text-muted">Generate production-ready config.yaml, migration.yaml, and .env files with an auto-generated 256-bit AES key.</p>
+          
+          <form id="form-generate" class="form-grid mt-4">
+            <div class="form-group">
+              <label>Database Engine Type</label>
+              <select id="gen-db-type" class="form-input">
+                <option value="postgres">PostgreSQL (5432)</option>
+                <option value="mysql">MySQL / MariaDB (3306)</option>
+                <option value="mongo">MongoDB (27017)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Storage Provider</label>
+              <select id="gen-storage" class="form-input">
+                <option value="s3">AWS S3 / Cloudflare R2 / MinIO</option>
+                <option value="gcs">Google Cloud Storage (GCS)</option>
+                <option value="local">Local Storage</option>
+              </select>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label><input type="checkbox" id="gen-force"> Overwrite existing template files if present</label>
+            </div>
+
+            <div class="form-group col-span-2">
+              <button type="submit" class="btn btn-primary">✨ Generate 3 Files Now</button>
+            </div>
+          </form>
+
+          <div id="gen-result" class="alert alert-success mt-4 hidden">
+            <h4>✓ Templates Generated Successfully!</h4>
+            <p>Generated Key: <code id="gen-key-display"></code></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content 3: Backup Runner -->
+      <section class="tab-content" id="tab-backup">
+        <div class="card">
+          <h3>⚡ Execute Backup Pipeline</h3>
+          <p class="text-muted">Stream database dumps directly through local AES-256-GCM encryption into cloud storage targets.</p>
+          
+          <div class="runner-controls mt-4">
+            <div class="form-group">
+              <label>Configuration Profile</label>
+              <input type="text" id="backup-config-path" class="form-input" value="config.yaml" placeholder="Path to config.yaml">
+            </div>
+            <div class="button-group mt-3" style="display: flex; gap: 0.75rem;">
+              <button class="btn btn-primary" id="btn-start-backup">🚀 Run Backup Pipeline Now</button>
+              <button class="btn btn-secondary" id="btn-dryrun-backup">🧪 Test Dry-Run</button>
+            </div>
+          </div>
+
+          <div class="terminal-window mt-4">
+            <div class="terminal-header">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+              <span class="terminal-title">Live Terminal Output Stream</span>
+            </div>
+            <pre class="terminal-body" id="backup-terminal">LunarDump Engine ready. Waiting for task invocation...</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content 4: Live Migration -->
+      <section class="tab-content" id="tab-migration">
+        <div class="card">
+          <h3>🔄 Zero-Disk Live Database Migration</h3>
+          <p class="text-muted">Stream database dumps directly from Server A to Server B in RAM with 0 bytes disk space used.</p>
+
+          <form id="form-migrate" class="form-grid mt-4">
+            <div class="card card-nested col-span-2">
+              <h4>1. Source Database (Server A)</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Engine</label>
+                  <select id="mig-src-type" class="form-input">
+                    <option value="postgres">PostgreSQL</option>
+                    <option value="mysql">MySQL</option>
+                    <option value="mongo">MongoDB</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Host</label>
+                  <input type="text" id="mig-src-host" class="form-input" value="192.168.1.10">
+                </div>
+                <div class="form-group">
+                  <label>Database Name</label>
+                  <input type="text" id="mig-src-name" class="form-input" value="production_db">
+                </div>
+                <div class="form-group">
+                  <label>Password</label>
+                  <input type="password" id="mig-src-pass" class="form-input" placeholder="Server A Password">
+                </div>
+              </div>
+            </div>
+
+            <div class="card card-nested col-span-2">
+              <h4>2. Target Database (Server B)</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Engine</label>
+                  <select id="mig-tgt-type" class="form-input">
+                    <option value="postgres">PostgreSQL</option>
+                    <option value="mysql">MySQL</option>
+                    <option value="mongo">MongoDB</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Host</label>
+                  <input type="text" id="mig-tgt-host" class="form-input" value="192.168.1.20">
+                </div>
+                <div class="form-group">
+                  <label>Database Name</label>
+                  <input type="text" id="mig-tgt-name" class="form-input" value="destination_db">
+                </div>
+                <div class="form-group">
+                  <label>Password</label>
+                  <input type="password" id="mig-tgt-pass" class="form-input" placeholder="Server B Password">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group col-span-2">
+              <button type="submit" class="btn btn-primary">🚀 Start Live Migration Stream</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab Content 5: Restore Archives -->
+      <section class="tab-content" id="tab-restore">
+        <div class="card">
+          <h3>📥 Cloud Storage Backup Archives</h3>
+          <p class="text-muted">List remote .enc backup archives and decrypt directly into target database engine.</p>
+          <button class="btn btn-secondary mb-3" id="btn-load-storage">🔄 Refresh File List</button>
+          
+          <div class="table-container">
+            <table class="table" id="table-storage">
+              <thead>
+                <tr>
+                  <th>Filename Key</th>
+                  <th>Size</th>
+                  <th>Last Modified</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="storage-body">
+                <tr>
+                  <td colspan="4" class="text-center text-muted">Click "Refresh File List" to fetch remote archives</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content 6: Daemon & Cron -->
+      <section class="tab-content" id="tab-cron">
+        <div class="card">
+          <h3>⏰ Daemon & Schedule Expression Parser</h3>
+          <p class="text-muted">Test human-friendly string schedule patterns for background daemon execution (--cron).</p>
+          
+          <div class="cron-examples mt-3">
+            <span class="badge badge-secondary cron-badge" style="cursor: pointer;" data-expr="day-2">day-2</span>
+            <span class="badge badge-secondary cron-badge" style="cursor: pointer;" data-expr="day-14.5">day-14.5</span>
+            <span class="badge badge-secondary cron-badge" style="cursor: pointer;" data-expr="week-mon-14.30">week-mon-14.30</span>
+            <span class="badge badge-secondary cron-badge" style="cursor: pointer;" data-expr="month-1-2">month-1-2</span>
+            <span class="badge badge-secondary cron-badge" style="cursor: pointer;" data-expr="every-15m">every-15m</span>
+          </div>
+
+          <div class="cron-parser-form mt-4">
+            <div class="form-group">
+              <label for="cron-expression">Schedule Expression</label>
+              <div class="input-group">
+                <input type="text" id="cron-expression" class="form-input" placeholder="e.g., day-14.5, every-15m, or standard cron string">
+                <button id="btn-parse-cron" class="btn btn-primary">Parse Expression</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="cron-result-card" class="mt-4 p-3" style="display: none; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+            <h4 class="text-info mb-3">🔮 Parser Result</h4>
+            <div class="mb-2"><strong>Standard Cron:</strong> <code id="res-cron-syntax" class="text-success" style="font-size: 1.1rem; padding: 2px 6px; background: rgba(0,0,0,0.3); border-radius: 4px;"></code></div>
+            <div class="mb-2"><strong>Description:</strong> <span id="res-cron-desc" class="text-white"></span></div>
+            <div class="mt-3">
+              <strong>Next 5 Upcoming Runs:</strong>
+              <ul id="res-cron-runs" class="text-muted mt-1" style="list-style-type: square; padding-left: 20px;"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

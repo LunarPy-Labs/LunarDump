@@ -1,6 +1,9 @@
 version: "1.0"
 backup:
   name: "production-postgres-daily"
+  # Optional Daemon Schedule Pattern:
+  # Examples: "day-2" (daily 02:00), "day-14.5" (daily 14:30), "week-14.5" (weekly), "month-1-2" (monthly), "every-15m", "0 2 * * *"
+  # cron: "day-2"
   database:
     type: "postgres" # Options: postgres | mysql | mongo
     host: "localhost"
@@ -17,7 +20,7 @@ backup:
   storage:
     # Target storage provider options:
     # - "s3"    : AWS S3, Cloudflare R2, MinIO, Wasabi, DigitalOcean Spaces
-    # - "gcs"   : Google Cloud Storage
+    # - "gcs"   : Google Cloud Storage (Requires GOOGLE_APPLICATION_CREDENTIALS in .env or environment)
     # - "local" : Local server directory path
     provider: "s3"
 

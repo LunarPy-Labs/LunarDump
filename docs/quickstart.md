@@ -1,75 +1,47 @@
 # Quickstart Guide
 
-Get up and running with **LunarDump** in less than 5 minutes.
+Get up and running with **LunarDump** in less than 2 minutes without writing configuration files manually.
 
 ---
 
-## Step 1: Generate an Encryption Key
+## Step 1: Generate Configuration & Environment Templates
 
-Generate a cryptographically secure 256-bit AES key:
+Run `lunardump config generate` to automatically create production-ready `config.yaml`, `migration.yaml`, and `.env` template files (pre-populated with an auto-generated 256-bit AES encryption key):
 
 ```bash
-lunardump keygen --output secret.key
+# Generate default templates (PostgreSQL + S3)
+lunardump config generate
+
+# Or specify your database engine (postgres | mysql | mongo) and storage target (s3 | gcs | local)
+lunardump config generate --db-type mysql --storage s3
 ```
+
+This generates three files instantly:
+- `config.yaml`: Backup pipeline configuration.
+- `migration.yaml`: Live database-to-database migration template.
+- `.env`: Pre-configured environment file with a cryptographically secure 256-bit AES key.
 
 ---
 
-## Step 2: Create Configuration (`config.yaml`)
+## Step 2: Edit Credentials in `.env`
 
-Create `config.yaml` in your project directory:
-
-```yaml
-version: "1.0"
-backup:
-  name: "production-postgres-daily"
-  database:
-    type: "postgres"
-    host: "localhost"
-    port: 5432
-    name: "main_db"
-    user: "postgres"
-    password_env: "DB_PASSWORD"
-
-  security:
-    encrypt: true
-    algorithm: "aes-256-gcm"
-    key_env: "LUNARDUMP_ENCRYPTION_KEY"
-
-  storage:
-    provider: "s3"
-    bucket: "company-db-backups"
-    region: "ap-southeast-1"
-    path: "daily/postgres/"
-    retention_days: 30
-
-  notifications:
-    on_success: true
-    on_failure: true
-    channels:
-      - type: "telegram"
-        bot_token_env: "TELEGRAM_BOT_TOKEN"
-        chat_id: "-100123456789"
-```
-
----
-
-## Step 3: Configure Environment Variables (`.env`)
-
-Create a `.env` file to hold secret credentials safely:
+Open `.env` and fill in your actual database password and cloud storage credentials:
 
 ```env
-DB_PASSWORD=your_secure_db_password
-LUNARDUMP_ENCRYPTION_KEY=f77693f31ebef68d774913969a3f6a57ee927fasd76sa876d8asd
-TELEGRAM_BOT_TOKEN=28764873246:Hjhdg5lbfv7ajshdasJ-Ghagshga
+DB_PASSWORD="your_actual_db_password"
+LUNARDUMP_ENCRYPTION_KEY="f48a9b2c..." # Auto-generated AES-256 key
 
-# S3 Credentials
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# Cloud Storage Credentials
+AWS_ACCESS_KEY_ID="your_aws_access_key_id"
+AWS_SECRET_ACCESS_KEY="your_aws_secret_access_key"
+
+# Notifications (Optional)
+TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
 ```
 
 ---
 
-## Step 4: Validate Configuration
+## Step 3: Validate Configuration & Connectivity
 
 Run a health check to verify database connectivity, client binary availability, and storage credentials:
 
@@ -79,9 +51,9 @@ lunardump config check --config config.yaml
 
 ---
 
-## Step 5: Run Backup
+## Step 4: Execute Backup
 
-Execute the backup pipeline:
+Run your first automated, zero-disk pipe streaming backup:
 
 ```bash
 lunardump run --config config.yaml

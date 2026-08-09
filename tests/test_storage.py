@@ -20,7 +20,7 @@ def test_storage_factory():
         assert isinstance(get_storage(s3_cfg), S3Storage)
 
     gcs_cfg = StorageConfig(provider="gcs", bucket="my-gcs-bucket", path="backups/")
-    with patch("lunardump.core.storage.gcs.gcs_storage.Client"):
+    with patch("google.cloud.storage.Client"):
         assert isinstance(get_storage(gcs_cfg), GCSStorage)
 
 
@@ -67,11 +67,12 @@ def test_s3_storage_upload_and_download(mock_boto_client):
     storage = S3Storage(cfg)
 
     def data_stream():
-        yield b"A" * (6 * 1024 * 1024)  # 6MB to trigger multipart chunk
+        yield b"A" * (1024 * 1024)  # 1MB chunk
 
-    res_url = storage.upload_stream(data_stream(), "db.dump")
-    assert res_url == "s3://my-bucket/daily/db.dump"
-    assert s3_client_mock.complete_multipart_upload.called
+    with patch("lunardump.core.storage.s3.MIN_MULTIPART_SIZE", 512 * 1024):
+        res_url = storage.upload_stream(data_stream(), "db.dump")
+        assert res_url == "s3://my-bucket/daily/db.dump"
+        assert s3_client_mock.complete_multipart_upload.called
 
     # Mock download stream
     body_mock = MagicMock()
@@ -104,7 +105,7 @@ def test_s3_storage_upload_and_download(mock_boto_client):
 
 # --- GCS Storage Driver Tests ---
 
-@patch("lunardump.core.storage.gcs.gcs_storage.Client")
+@patch("google.cloud.storage.Client")
 def test_gcs_storage_upload_and_download(mock_gcs_client):
     client_instance = MagicMock()
     bucket_mock = MagicMock()
@@ -136,3 +137,20 @@ def test_gcs_storage_upload_and_download(mock_gcs_client):
     # Test connection
     bucket_mock.exists.return_value = True
     assert storage.test_connection() is True
+
+    # Test download_stream
+    file_read_mock = MagicMock()
+    file_read_mock.read.side_effect = [b"gcs download data", b""]
+    blob_mock.open.return_value.__enter__.return_value = file_read_mock
+    chunks = list(storage.download_stream("daily/db.dump"))
+    assert b"".join(chunks) == b"gcs download data"
+
+    # Test list_backups
+    b1 = MagicMock()
+    b1.name = "daily/backup1.sql.enc"
+    b1.size = 1024
+    b1.updated = datetime.now(timezone.utc)
+    client_instance.list_blobs.return_value = [b1]
+    files = storage.list_backups()
+    assert len(files) == 1
+    assert files[0]["key"] == "daily/backup1.sql.enc"

@@ -41,3 +41,8 @@ secret.key
 
 # MkDocs build directory
 site/
+
+config.yaml
+migration.yaml
+*.json
+RELEASE_NOTES.md

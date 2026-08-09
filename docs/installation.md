@@ -29,7 +29,7 @@ uvx lunardump run --config config.yaml
 
 ## 🌐 Pre-installed OS Distributions
 
-<img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" />
+<a href="https://www.hacktrack-linux.org/" target="_blank"><img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" /></a>
 
 - **HackTrack OS**: Pre-installed natively out-of-the-box. You can run `lunardump` directly from any terminal window or launch it from the system application menu under **Extra Tools**.
 

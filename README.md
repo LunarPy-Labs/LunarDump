@@ -6,10 +6,10 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/lunardump.svg?color=blue&nocache=1)](https://pypi.org/project/lunardump/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/lunardump?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/lunardump)
-[![Documentation Status](https://readthedocs.org/projects/lunardump/badge/?version=latest)](https://lunardump.readthedocs.io/)
+[![Documentation Status](https://readthedocs.org/projects/lunardump/badge/?version=latest)](https://lunardump.indhifarhandika.dev/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/indhifarhandika/lunardump.svg)](https://hub.docker.com/r/indhifarhandika/lunardump)
-[![Python Version](https://img.shields.io/pypi/pyversions/lunardump.svg)](https://pypi.org/project/lunardump/)
-[![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
+[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
+[![Memray Peak RAM](https://img.shields.io/badge/Peak_RAM-119.1MB_(8GB_Dump)-success)](https://lunardump.readthedocs.io/en/latest/architecture/#5-real-world-benchmark-memray-memory-profiler)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Telegram Community](https://img.shields.io/badge/Telegram-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://t.me/lunardump)
 
@@ -110,104 +110,50 @@ sudo apt-get install -y mongodb-org
 
 ## 🚀 Step-by-Step Tutorial & Usage Guide
 
-### Step 1: Generate Encryption Key
+### Step 1: Generate Configuration & Environment Templates
 
-Generate a cryptographically secure 256-bit (64-character hex) key:
-
-```bash
-# Print key to terminal stdout
-lunardump keygen
-
-# Or save key directly to a secure secret file (with 0600 permissions)
-lunardump keygen --output secret.key
-```
-
-### Step 2: Create Configuration (`config.yaml`)
-
-Create your `config.yaml` file to define backup jobs and target destinations:
-
-```yaml
-version: "1.0"
-backup:
-  name: "production-mysql-daily"
-  
-  database:
-    type: "mysql"            # Options: postgres | mysql | mongo
-    host: "127.0.0.1"
-    port: 3306
-    name: "username"
-    user: "db_user"
-    password_env: "DB_PASSWORD" # Environment variable holding database password
-
-  security:
-    encrypt: true
-    algorithm: "aes-256-gcm"
-    key_env: "LUNARDUMP_ENCRYPTION_KEY" # Env var name, key file path, or raw hex key string
-
-  storage:
-    # Target storage provider options:
-    # - "s3"    : AWS S3, Cloudflare R2, MinIO, Wasabi, DigitalOcean Spaces
-    # - "gcs"   : Google Cloud Storage
-    # - "local" : Local server directory path
-    provider: "s3"
-
-    # Bucket name for cloud storage (S3/GCS), or root folder path for local storage (e.g., "/var/backups")
-    bucket: "company-db-backups"
-
-    # Storage region (Required for AWS S3; optional for GCS or Local)
-    region: "ap-southeast-1"
-
-    # Remote folder path prefix inside the bucket where backup files (.enc) will be stored
-    path: "daily/mysql/"
-
-    # Retention policy: automatic purge of backup archives older than the specified days
-    retention_days: 30
-
-    # Custom S3 endpoint URL (Required ONLY for MinIO, Cloudflare R2, or custom S3-compatible providers)
-    # Examples:
-    # - Cloudflare R2: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
-    # - MinIO        : "http://minio.internal:9000"
-    endpoint_url: ""
-
-  notifications:
-    on_success: true
-    on_failure: true
-
-    # Notification Channels:
-    # - Must contain AT LEAST 1 channel or CAN contain MULTIPLE channels (e.g. Telegram + Slack together).
-    # - Supported types: "telegram" and "slack".
-    channels:
-      - type: "telegram"
-        bot_token_env: "TELEGRAM_BOT_TOKEN"
-        chat_id: "-82764827364"
-      - type: "slack"
-        webhook_url_env: "SLACK_WEBHOOK_URL"
-```
-
-### Step 3: Setup Environment Variables (`.env`)
-
-Keep secret credentials out of your configuration files using a `.env` file or environment variables:
+Generate production-ready configuration and `.env` template files instantly without manual typing:
 
 ```bash
-# Create .env file
-cat <<EOF > .env
+# Generate default templates (PostgreSQL + S3)
+lunardump config generate
+
+# Or specify database engine (postgres | mysql | mongo) and storage target (s3 | gcs | local)
+lunardump config generate --db-type postgres --storage s3
+```
+
+This single command automatically generates 3 files:
+1. `config.yaml`: Pre-configured backup job profile.
+2. `migration.yaml`: Live database-to-database migration profile.
+3. `.env`: Environment file containing an **auto-generated cryptographically secure 256-bit AES key**!
+
+---
+
+### Step 2: Configure Environment Credentials (`.env`)
+
+Open `.env` to set your real database passwords and cloud credentials:
+
+```env
+# Database Passwords
 DB_PASSWORD="your_database_password_here"
-LUNARDUMP_ENCRYPTION_KEY="a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8"
-TELEGRAM_BOT_TOKEN="872642874:HkajbsdakJkajSAs2kdad-hadkjaKJHS"
+SOURCE_DB_PASS="password_server_a"
+TARGET_DB_PASS="password_server_b"
+
+# Cryptographic AES-256 Secret Key (Auto-Generated Hex)
+LUNARDUMP_ENCRYPTION_KEY="f48a9b2c..."
 
 # Cloud Storage Credentials (AWS S3)
-AWS_ACCESS_KEY_ID="AKIAXXXXXXXXXXXXXXXX"
-AWS_SECRET_ACCESS_KEY="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+AWS_ACCESS_KEY_ID="your_aws_access_key_id"
+AWS_SECRET_ACCESS_KEY="your_aws_secret_access_key"
 
 # Or for Google Cloud Storage (GCS)
 GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
-EOF
 
-# Load environment variables in your current shell
-source .env
+# Notifications
+TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
 ```
 
-### Step 4: Verify System Connectivity (Health Check)
+### Step 3: Verify System Connectivity (Health Check)
 
 Before running your backup job, test connectivity to your database, CLI tools, encryption keys, and cloud storage:
 
@@ -229,7 +175,7 @@ Output preview:
 └──────────────────────────┴───────────────────────────────┴────────────────────────────────────┘
 ```
 
-### Step 5: Execute Backup Pipeline
+### Step 4: Execute Backup Pipeline
 
 Run the automated backup pipeline:
 
@@ -283,9 +229,36 @@ lunardump db dump --type postgres --host localhost --user postgres --name main_d
 
 ---
 
-## ⏰ Automating with Cron Jobs
+## ⏰ Automating with Daemon & Schedule (`--cron`)
 
-Automate daily database backups by setting up a cron job on your server:
+LunarDump features a built-in continuous background daemon runner. You can automate recurring backup schedules directly using human-friendly schedule expressions or standard cron syntax:
+
+### 1. Built-in Daemon Runner (`--cron`)
+
+Run LunarDump continuously as a background daemon process:
+
+```bash
+# Run daily at 02:00 AM (Human-friendly string)
+lunardump run --config config.yaml --cron "day-2"
+
+# Run weekly on Monday at 14:30
+lunardump run --config config.yaml --cron "week-mon-14.5"
+
+# Run monthly on the 1st of every month at 02:00 AM
+lunardump run --config config.yaml --cron "month-1-2"
+
+# Run every 15 minutes
+lunardump run --config config.yaml --cron "every-15m"
+
+# Standard 5-field cron syntax
+lunardump run --config config.yaml --cron "0 2 * * *"
+```
+
+> 💡 **Tip:** You can also define `cron: "day-2"` inside your `config.yaml` file so running `lunardump run --config config.yaml` automatically launches daemon mode.
+
+### 2. System Crontab (OS-Level Scheduling)
+
+Alternatively, schedule one-off backup runs via Linux system `crontab`:
 
 ```bash
 # Open crontab editor
@@ -301,30 +274,6 @@ Contributions, issues, and feature requests are welcome! Whether it's reporting 
 
 For full development setup, testing standards, and pull request guidelines, please read our [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Quick Start for Contributors:
-
-1. **Fork the Repository** on GitHub.
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/indhifarhandika/LunarDump.git
-   cd LunarDump
-   ```
-3. **Set up virtual environment & development dependencies**:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -e ".[dev,gcs]"
-   ```
-4. **Create a feature branch**:
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-5. **Run test suite & ensure code coverage passes**:
-   ```bash
-   pytest --cov=lunardump --cov-report=term-missing
-   ```
-6. **Commit & Push your changes**, then submit a **Pull Request**!
-
 ---
 
 ## 🔒 Security
@@ -335,7 +284,7 @@ For security policies, vulnerability reporting, and cryptographic safety guideli
 
 ## 🌐 OS Distribution
 
-<img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" />
+<a href="https://www.hacktrack-linux.org/" target="_blank"><img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" /></a>
 
 * **HackTrack:** Pre-installed natively. You can run `lunardump` directly from the terminal or launch it from the system menu under **Extra Tools**.
 

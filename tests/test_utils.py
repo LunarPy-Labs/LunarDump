@@ -44,3 +44,10 @@ def test_run_command():
 def test_logger_setup():
     log = setup_logger("DEBUG")
     assert log.level == 10  # DEBUG level
+
+
+def test_ensure_extended_path():
+    from lunardump.core.utils.process import ensure_extended_path
+    import os
+    ensure_extended_path()
+    assert os.environ.get("PATH") is not None

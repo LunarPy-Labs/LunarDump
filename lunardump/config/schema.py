@@ -129,9 +129,11 @@ class NotificationConfig(BaseModel):
 
 class BackupProfile(BaseModel):
     name: str = Field(..., description="Backup job profile name")
+    cron: Optional[str] = Field(default=None, description="Optional schedule expression for daemon mode (e.g. 'day-2', 'week-14.5', 'month-1-2', '0 2 * * *')")
     database: DatabaseConfig
+    target_database: Optional[DatabaseConfig] = Field(default=None, description="Optional target database config for live migration")
     security: SecurityConfig = Field(default_factory=SecurityConfig)
-    storage: StorageConfig
+    storage: Optional[StorageConfig] = Field(default_factory=lambda: StorageConfig(provider="local", bucket="/tmp"))
     notifications: NotificationConfig = Field(default_factory=NotificationConfig)
 
 

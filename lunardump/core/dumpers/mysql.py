@@ -80,5 +80,8 @@ class MySQLDumper(BaseDumper):
             "-u", self.config.user,
             "ping",
         ]
-        code, _, _ = run_command(cmd, env=self._build_env())
-        return code == 0
+        try:
+            code, _, _ = run_command(cmd, env=self._build_env())
+            return code == 0
+        except Exception:
+            return False

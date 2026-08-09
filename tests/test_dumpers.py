@@ -172,3 +172,24 @@ def test_mongo_check_connection(mock_which, mock_cmd):
     cfg = DatabaseConfig(type="mongo", name="db", user="usr")
     dumper = MongoDBDumper(cfg)
     assert dumper.check_connection() is True
+
+    mock_cmd.side_effect = Exception("Conn Error")
+    assert dumper.check_connection() is False
+
+
+@patch("lunardump.core.dumpers.mysql.run_command")
+@patch("shutil.which", return_value="/usr/bin/mysqladmin")
+def test_mysql_check_connection_fail(mock_which, mock_cmd):
+    mock_cmd.side_effect = Exception("Conn Error")
+    cfg = DatabaseConfig(type="mysql", name="db", user="usr")
+    dumper = MySQLDumper(cfg)
+    assert dumper.check_connection() is False
+
+
+@patch("lunardump.core.dumpers.postgres.run_command")
+@patch("shutil.which", return_value="/usr/bin/pg_isready")
+def test_postgres_check_connection_fail(mock_which, mock_cmd):
+    mock_cmd.side_effect = Exception("Conn Error")
+    cfg = DatabaseConfig(type="postgres", name="db", user="usr")
+    dumper = PostgreSQLDumper(cfg)
+    assert dumper.check_connection() is False
