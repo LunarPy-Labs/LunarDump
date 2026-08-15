@@ -2,12 +2,12 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lunardump import __version__
-from lunardump.config import load_config, LunarDumpConfig, DatabaseConfig
+from lunardump.config import load_config, LunarDumpConfig, BackupProfile, DatabaseConfig, SecurityConfig, StorageConfig
 from lunardump.core.dumpers import get_dumper
 from lunardump.core.restorers import get_restorer
 from lunardump.core.security import StreamCipher, generate_key_hex
@@ -29,33 +29,58 @@ class GenerateRequest(BaseModel):
 class MigrationRequest(BaseModel):
     source_type: str
     source_host: str = "localhost"
-    source_port: int = 5432
+    source_port: Optional[int] = None
     source_name: str
     source_user: str = "postgres"
     source_password: Optional[str] = None
 
     target_type: str
     target_host: str = "localhost"
-    target_port: int = 5432
+    target_port: Optional[int] = None
     target_name: str
     target_user: str = "postgres"
     target_password: Optional[str] = None
+    
+    dry_run: bool = False
 
 
 class BackupRunRequest(BaseModel):
-    config_path: str = "config.yaml"
+    config_path: Optional[str] = None
     dry_run: bool = False
+    
+    # Direct Command Parameters (Flexible Mode without config file)
+    db_type: Optional[str] = None
+    db_host: str = "localhost"
+    db_port: Optional[int] = None
+    db_name: Optional[str] = None
+    db_user: str = "postgres"
+    db_password: Optional[str] = None
+    
+    encrypt: bool = True
+    encryption_key: Optional[str] = None
+    
+    storage_provider: str = "local"
+    storage_bucket: str = "./backups"
+    storage_region: str = "ap-southeast-1"
+    storage_path: str = "backups/"
+    retention_days: int = 30
 
 
 class RestoreRunRequest(BaseModel):
     remote_key: str
-    config_path: str = "config.yaml"
+    config_path: Optional[str] = None
     target_type: str = "postgres"
     target_host: str = "localhost"
     target_port: int = 5432
     target_name: str = "restored_db"
     target_user: str = "postgres"
     target_password: Optional[str] = None
+    encryption_key: Optional[str] = None
+
+
+class CommandExecuteRequest(BaseModel):
+    command: str = "backup"  # backup, health, migration, generate
+    params: Dict[str, Any] = Field(default_factory=dict)
 
 
 @router.get("/system/info")
@@ -70,6 +95,7 @@ def get_system_info() -> Dict[str, Any]:
         "platform": sys.platform,
         "peak_ram": "119.1 MB (Constant O(1))",
         "architecture": "Zero-Disk RAM Pipe Streaming",
+        "command_mode": "Flexible Direct Parameter Execution",
     }
 
 
@@ -107,70 +133,78 @@ def parse_cron_expression(expression: str = Query(...)) -> Dict[str, Any]:
 
 
 @router.get("/health")
-def get_health_check(config_path: str = Query("config.yaml")) -> Dict[str, Any]:
-    """Execute health diagnostics on configuration, database connectivity, tools, and storage targets."""
-    target_file = Path(config_path)
-    if not target_file.exists():
-        return {
-            "status": "warning",
-            "message": f"Config file '{config_path}' does not exist.",
-            "components": [],
-        }
+def get_health_check(
+    config_path: Optional[str] = Query(None),
+    db_type: Optional[str] = Query(None),
+    db_host: Optional[str] = Query("localhost"),
+    db_port: Optional[int] = Query(None),
+    db_name: Optional[str] = Query(None),
+    db_user: Optional[str] = Query("postgres"),
+    db_password: Optional[str] = Query(None),
+) -> Dict[str, Any]:
+    """Execute health diagnostics on binaries, connectivity, and storage targets."""
+    components = []
 
-    try:
-        cfg = load_config(target_file)
-        components = []
-
-        # 1. Config schema
-        components.append({"name": "Configuration File", "details": str(target_file), "status": "VALID (Pydantic v2)"})
-
-        # 2. Database client binary
+    # 1. Check Binary Client Tool Installations
+    for engine in ["postgres", "mysql", "mongo"]:
         try:
-            dumper = get_dumper(cfg.backup.database)
+            dummy_db = DatabaseConfig(type=engine, name="dummy", user="dummy")
+            dumper = get_dumper(dummy_db)
             has_tool = dumper.check_tool()
             components.append({
-                "name": f"DB Engine ({cfg.backup.database.type})",
-                "details": "Client Tool Binary Check",
+                "name": f"DB Engine ({engine.upper()})",
+                "details": f"Client Binary Check ({dumper.tool_name})",
                 "status": "INSTALLED" if has_tool else "MISSING BINARY",
             })
         except Exception as e:
-            components.append({"name": "DB Engine", "details": str(e), "status": "ERROR"})
+            components.append({
+                "name": f"DB Engine ({engine.upper()})",
+                "details": str(e),
+                "status": "ERROR",
+            })
 
-        # 3. Database connectivity
+    # 2. Check Database Connectivity if parameter or config provided
+    cfg = None
+    overall_status = "ok"
+    if config_path:
+        target_path = Path(config_path)
+        if target_path.exists():
+            try:
+                cfg = load_config(target_path)
+                components.append({"name": "Configuration File", "details": str(config_path), "status": "VALID (Pydantic v2)"})
+            except Exception as e:
+                components.append({"name": "Configuration File", "details": f"Failed to load {config_path}: {e}", "status": "WARNING"})
+        else:
+            overall_status = "warning"
+            components.append({"name": "Configuration File", "details": f"Config file '{config_path}' does not exist.", "status": "MISSING"})
+    elif db_type and db_name:
         try:
-            dumper = get_dumper(cfg.backup.database)
+            db_cfg = DatabaseConfig(
+                type=db_type,
+                host=db_host or "localhost",
+                port=db_port,
+                name=db_name,
+                user=db_user or "postgres",
+                password=db_password,
+            )
+            dumper = get_dumper(db_cfg)
             has_conn = dumper.check_connection()
             components.append({
-                "name": "Database Connection",
-                "details": f"{cfg.backup.database.host}:{cfg.backup.database.port}/{cfg.backup.database.name}",
+                "name": f"Database Connection ({db_type})",
+                "details": f"{db_host}:{db_cfg.port}/{db_name}",
                 "status": "CONNECTED" if has_conn else "CONNECTION FAILED",
             })
         except Exception as e:
             components.append({"name": "Database Connection", "details": str(e), "status": "ERROR"})
+    else:
+        components.append({"name": "Command Execution Mode", "details": "Direct Parameter Mode (Zero-Config Required)", "status": "ACTIVE"})
 
-        # 4. Storage connectivity
-        try:
-            storage = get_storage(cfg.backup.storage)
-            has_storage = storage.test_connection()
-            components.append({
-                "name": "Storage Target",
-                "details": f"{cfg.backup.storage.provider}://{cfg.backup.storage.bucket}",
-                "status": "REACHABLE" if has_storage else "UNREACHABLE",
-            })
-        except Exception as e:
-            components.append({"name": "Storage Target", "details": str(e), "status": "ERROR"})
-
-        return {
-            "status": "ok",
-            "profile_name": cfg.backup.name,
-            "components": components,
-        }
-    except Exception as err:
-        return {
-            "status": "error",
-            "message": str(err),
-            "components": [],
-        }
+    return {
+        "status": overall_status,
+        "message": f"Config file '{config_path}' does not exist." if overall_status == "warning" else "Diagnostics completed",
+        "profile_name": cfg.backup.name if cfg else "Direct Parameter Engine",
+        "components": components,
+    }
 
 
 @router.post("/generate")
@@ -267,17 +301,53 @@ GOOGLE_APPLICATION_CREDENTIALS="/path/to/gcp-service-account-key.json"
 
 @router.post("/backup/run")
 def run_backup_job(req: BackupRunRequest) -> Dict[str, Any]:
-    """Execute automated backup pipeline for specified config file."""
+    """Execute automated backup pipeline using either direct parameters or config file."""
     from datetime import datetime
-    target_file = Path(req.config_path)
-    if not target_file.exists():
+
+    # 1. Resolve configuration profile (Config File OR Direct Parameters)
+    if req.config_path and Path(req.config_path).exists():
+        try:
+            cfg = load_config(Path(req.config_path))
+        except Exception as err:
+            return {"status": "error", "message": f"Config Load Error: {err}"}
+    elif req.db_type and req.db_name:
+        try:
+            db_cfg = DatabaseConfig(
+                type=req.db_type,
+                host=req.db_host or "localhost",
+                port=req.db_port,
+                name=req.db_name,
+                user=req.db_user or "postgres",
+                password=req.db_password,
+            )
+            sec_cfg = SecurityConfig(
+                encrypt=req.encrypt,
+                key=req.encryption_key if req.encryption_key else None,
+            )
+            stg_cfg = StorageConfig(
+                provider=req.storage_provider or "local",
+                bucket=req.storage_bucket or "./backups",
+                region=req.storage_region,
+                path=req.storage_path or "backups/",
+                retention_days=req.retention_days,
+            )
+            profile = BackupProfile(
+                name=f"ui-adhoc-{req.db_type}-{req.db_name}",
+                database=db_cfg,
+                security=sec_cfg,
+                storage=stg_cfg,
+            )
+            cfg = LunarDumpConfig(backup=profile)
+        except Exception as err:
+            return {"status": "error", "message": f"Parameter Construction Error: {err}"}
+    else:
         return {
             "status": "warning",
-            "message": f"Config file '{req.config_path}' does not exist.",
+            "message": "Please specify Database Engine Type & Database Name OR supply a valid config_path.",
         }
 
+    # 2. Execute Backup or Dry-Run
     try:
-        cfg = load_config(target_file)
         if req.dry_run:
             try:
                 dumper = get_dumper(cfg.backup.database)
@@ -294,7 +364,7 @@ def run_backup_job(req: BackupRunRequest) -> Dict[str, Any]:
             return {
                 "status": "success",
                 "mode": "dry_run",
-                "message": f"Dry-run test passed. DB Tool: {'INSTALLED' if d_ok else 'MISSING'}, Storage: {'REACHABLE' if s_ok else 'UNREACHABLE'}",
+                "message": f"Dry-run test passed. DB Tool: {'INSTALLED' if d_ok else 'MISSING'}, Storage Target ({cfg.backup.storage.provider}): {'REACHABLE' if s_ok else 'UNREACHABLE'}",
             }
 
         dumper = get_dumper(cfg.backup.database)
@@ -315,7 +385,7 @@ def run_backup_job(req: BackupRunRequest) -> Dict[str, Any]:
 
         return {
             "status": "success",
-            "message": f"Backup pipeline executed successfully. Uploaded to: {remote_path}",
+            "message": f"Backup pipeline executed successfully. Target: {remote_path}",
             "remote_path": remote_path,
         }
     except Exception as err:
@@ -326,27 +396,43 @@ def run_backup_job(req: BackupRunRequest) -> Dict[str, Any]:
 
 
 @router.get("/storage/files")
-def list_storage_files(config_path: str = Query("config.yaml")) -> Dict[str, Any]:
-    """List backup archives in configured cloud storage provider."""
-    target_file = Path(config_path)
-    if not target_file.exists():
-        return {
-            "status": "warning",
-            "message": f"Config file '{config_path}' does not exist.",
-            "provider": "unknown",
-            "bucket": "unknown",
-            "count": 0,
-            "files": [],
-        }
+def list_storage_files(
+    config_path: Optional[str] = Query(None),
+    provider: Optional[str] = Query(None),
+    bucket: Optional[str] = Query(None),
+    region: Optional[str] = Query("ap-southeast-1"),
+    path: Optional[str] = Query("backups/"),
+) -> Dict[str, Any]:
+    """List backup archives in cloud storage using direct parameters or config path."""
+    stg_cfg = None
+
+    if config_path and Path(config_path).exists():
+        try:
+            cfg = load_config(Path(config_path))
+            stg_cfg = cfg.backup.storage
+        except Exception as err:
+            return {"status": "error", "message": f"Config Load Error: {err}", "files": []}
+    elif provider and bucket:
+        try:
+            stg_cfg = StorageConfig(
+                provider=provider,
+                bucket=bucket,
+                region=region,
+                path=path or "backups/",
+            )
+        except Exception as err:
+            return {"status": "error", "message": f"Storage Config Error: {err}", "files": []}
+    else:
+        # Default local fallback storage inspector
+        stg_cfg = StorageConfig(provider="local", bucket="./backups", path="")
 
     try:
-        cfg = load_config(target_file)
-        storage = get_storage(cfg.backup.storage)
+        storage = get_storage(stg_cfg)
         files = storage.list_backups()
         return {
             "status": "success",
-            "provider": cfg.backup.storage.provider,
-            "bucket": cfg.backup.storage.bucket,
+            "provider": stg_cfg.provider,
+            "bucket": stg_cfg.bucket,
             "count": len(files),
             "files": files,
         }
@@ -354,11 +440,30 @@ def list_storage_files(config_path: str = Query("config.yaml")) -> Dict[str, Any
         return {
             "status": "error",
             "message": f"Storage Error ({type(err).__name__}): {err}",
-            "provider": "error",
-            "bucket": "error",
+            "provider": stg_cfg.provider if stg_cfg else "unknown",
+            "bucket": stg_cfg.bucket if stg_cfg else "unknown",
             "count": 0,
             "files": [],
         }
+
+
+@router.post("/command/execute")
+def execute_ui_command(req: CommandExecuteRequest) -> Dict[str, Any]:
+    """Execute ad-hoc command payload dynamically from UI Command Builder."""
+    cmd = req.command.lower()
+    params = req.params
+
+    if cmd == "backup":
+        backup_req = BackupRunRequest(**params)
+        return run_backup_job(backup_req)
+    elif cmd == "migration":
+        mig_req = MigrationRequest(**params)
+        return run_live_migration(mig_req)
+    elif cmd == "generate":
+        gen_req = GenerateRequest(**params)
+        return generate_templates(gen_req)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported command '{req.command}'")
 
 
 @router.post("/migration/run")
@@ -367,34 +472,56 @@ def run_live_migration(req: MigrationRequest) -> Dict[str, Any]:
     try:
         source_db = DatabaseConfig(
             type=req.source_type,
-            host=req.source_host,
+            host=req.source_host or "localhost",
             port=req.source_port,
             name=req.source_name,
-            user=req.source_user,
-            password_env="TEMP_SOURCE_PASS" if req.source_password else None,
+            user=req.source_user or "postgres",
+            password=req.source_password,
         )
 
         target_db = DatabaseConfig(
             type=req.target_type,
-            host=req.target_host,
+            host=req.target_host or "localhost",
             port=req.target_port,
             name=req.target_name,
-            user=req.target_user,
-            password_env="TEMP_TARGET_PASS" if req.target_password else None,
+            user=req.target_user or "postgres",
+            password=req.target_password,
         )
 
-        if req.source_password:
-            os.environ["TEMP_SOURCE_PASS"] = req.source_password
-        if req.target_password:
-            os.environ["TEMP_TARGET_PASS"] = req.target_password
-
         migrator = DatabaseMigrator(source_db, target_db)
+
+        if req.dry_run:
+            try:
+                src_tool_ok = migrator.source_dumper.check_tool()
+            except Exception:
+                src_tool_ok = False
+
+            try:
+                tgt_tool_ok = migrator.target_restorer.check_tool()
+            except Exception:
+                tgt_tool_ok = False
+
+            msg = (
+                f"Migration Dry-Run Test Completed.\n"
+                f"• Source Dumper ({req.source_type.upper()}): {'INSTALLED' if src_tool_ok else 'MISSING BINARY TOOL'}\n"
+                f"• Target Restorer ({req.target_type.upper()}): {'INSTALLED' if tgt_tool_ok else 'MISSING BINARY TOOL'}"
+            )
+            return {
+                "status": "success" if (src_tool_ok and tgt_tool_ok) else "warning",
+                "message": msg,
+            }
+
         migrator.check_prerequisites()
         success = migrator.execute_migration()
 
         return {
             "status": "success" if success else "failed",
-            "message": "Database migration executed successfully." if success else "Migration failed.",
+            "message": "Database migration executed successfully." if success else "Migration execution returned failure status.",
         }
     except Exception as err:
-        raise HTTPException(status_code=500, detail=str(err))
+        return {
+            "status": "error",
+            "message": f"Migration Error ({type(err).__name__}): {err}",
+        }
+
+

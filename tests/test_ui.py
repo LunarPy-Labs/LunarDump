@@ -256,3 +256,73 @@ def test_ui_parse_cron(client):
     assert res_bad.json()["status"] == "error"
 
 
+def test_ui_health_check_zero_config(client):
+    """Test health check endpoint without any config.yaml file present."""
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "profile_name" in data
+    assert any("DB Engine" in c["name"] for c in data["components"])
+
+
+def test_ui_backup_run_direct_params(client, tmp_path, monkeypatch):
+    """Test executing backup pipeline using direct command parameters without config file."""
+    class MockDumper:
+        def dump_stream(self):
+            yield b"DIRECT_PARAM_DUMP_DATA"
+
+    monkeypatch.setattr("lunardump.ui.routes.get_dumper", lambda db: MockDumper())
+
+    target_dir = tmp_path / "adhoc_backups"
+    payload = {
+        "db_type": "postgres",
+        "db_host": "localhost",
+        "db_port": 5432,
+        "db_name": "test_db",
+        "db_user": "postgres",
+        "db_password": "secret_password",
+        "encrypt": True,
+        "encryption_key": "894fec11371555b89d8520af8d3da8af6c2fac5b4d5364e17900d46cffa15060",
+        "storage_provider": "local",
+        "storage_bucket": str(target_dir),
+        "dry_run": False,
+    }
+
+    res = client.post("/api/backup/run", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert "executed successfully" in data["message"]
+
+
+def test_ui_command_execute(client, tmp_path, monkeypatch):
+    """Test executing command via /api/command/execute endpoint."""
+    class MockDumper:
+        def dump_stream(self):
+            yield b"COMMAND_EXEC_DATA"
+
+    monkeypatch.setattr("lunardump.ui.routes.get_dumper", lambda db: MockDumper())
+
+    target_dir = tmp_path / "cmd_backups"
+    payload = {
+        "command": "backup",
+        "params": {
+            "db_type": "mysql",
+            "db_host": "localhost",
+            "db_name": "cmd_test_db",
+            "db_user": "root",
+            "storage_provider": "local",
+            "storage_bucket": str(target_dir),
+            "dry_run": True,
+        }
+    }
+
+    res = client.post("/api/command/execute", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert data["mode"] == "dry_run"
+
+
+
