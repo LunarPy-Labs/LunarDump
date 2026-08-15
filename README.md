@@ -8,10 +8,9 @@
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/lunardump?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/lunardump)
 [![Documentation Status](https://readthedocs.org/projects/lunardump/badge/?version=latest)](https://lunardump.indhifarhandika.dev/)
 [![Docker Pulls](https://img.shields.io/docker/pulls/indhifarhandika/lunardump.svg)](https://hub.docker.com/r/indhifarhandika/lunardump)
-[![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://pypi.org/project/lunardump/)
 [![Memray Peak RAM](https://img.shields.io/badge/Peak_RAM-119.1MB_(8GB_Dump)-success)](https://lunardump.readthedocs.io/en/latest/architecture/#5-real-world-benchmark-memray-memory-profiler)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Telegram Community](https://img.shields.io/badge/Telegram-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](https://t.me/lunardump)
 
 > **Lightweight, Fast, Zero-Trust Database Backup Engine**
 
@@ -287,14 +286,6 @@ For security policies, vulnerability reporting, and cryptographic safety guideli
 <a href="https://www.hacktrack-linux.org/" target="_blank"><img width="400" height="100" alt="mini-logotype-hacktrack" src="https://github.com/user-attachments/assets/e5a189ec-7f94-457e-9556-98603d273ac1" /></a>
 
 * **HackTrack:** Pre-installed natively. You can run `lunardump` directly from the terminal or launch it from the system menu under **Extra Tools**.
-
----
-
-## 💬 Community & Support
-
-Have questions, need help setting up your backup pipeline, or want to discuss feature requests with other developers? Join our official Telegram Community:
-
-[![Telegram Community](https://img.shields.io/badge/Telegram-Join_Community-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/lunardump)
 
 ---
 
